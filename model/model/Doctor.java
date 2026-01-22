@@ -1,13 +1,14 @@
-package org.example;
+package model;
+import exception.InvalidInputException;
 
-public class Doctor extends Person{
+public class Doctor extends Person {
 
 // FIELDS
     private String status;
     private int experience;
 
 // CONSTRUCTOR
-    public Doctor(int id, String name, int age, String role, String status, int experience) {
+    public Doctor(int id, String name, int age, String role, String status, int experience) throws InvalidInputException {
         super(id, name, age, role);
         this.status = status;
         this.experience = experience;
@@ -15,7 +16,7 @@ public class Doctor extends Person{
 
 // METHOD 1
     public void work(){
-        System.out.println("Doctor: " + name + " is treating patients (" + status + ")");
+        System.out.println("model.Doctor: " + name + " is treating patients (" + status + ")");
     }
 
 // METHOD 2 GETTERS
@@ -37,6 +38,10 @@ public class Doctor extends Person{
         this.experience = experience;
     }
 
+    @Override
+    public boolean isAdult(){
+        return age >= 18;
+    }
 
 // UNIC METHOD 1
     public boolean isSenior(){

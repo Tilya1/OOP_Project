@@ -1,4 +1,6 @@
-package org.example;
+package model;
+
+import exception.InvalidInputException;
 
 public class Patient extends Person{
 
@@ -7,7 +9,7 @@ public class Patient extends Person{
     private String sickness;
 
 // CONSTRUCTOR
-    public Patient(int id, String name, int age, String role, String contact, String sickness) {
+    public Patient(int id, String name, int age, String role, String contact, String sickness) throws InvalidInputException {
         super(id, name, age, role);
         this.contact = contact;
         this.sickness = sickness;
@@ -15,7 +17,7 @@ public class Patient extends Person{
 
 // METHOD 1
     public void work() {
-        System.out.println("Patient: " + name + " is sick with the (" + sickness + ")");
+        System.out.println("model.Patient: " + name + " is sick with the (" + sickness + ")");
     }
 
 // METHOD 2
@@ -38,6 +40,10 @@ public class Patient extends Person{
         this.sickness = sickness;
     }
 
+    @Override
+    public boolean isAdult(){
+        return age >= 18;
+    }
 
 // UNIC METHOD 1
     public boolean isSick() {
@@ -47,7 +53,7 @@ public class Patient extends Person{
 // UNIC METHOD 2
     public void updateContact(String newContact) {
         this.contact = newContact;
-        System.out.println("Patient " + name + " contact updated.");
+        System.out.println("model.Patient " + name + " contact updated.");
     }
 }
 

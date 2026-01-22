@@ -1,37 +1,40 @@
-package org.example;
+package menu;
+
 import java.util.ArrayList;
 import java.util.Scanner;
+import model.*;
 
-public class Main {
+public class HospitalMenu implements Menu {
     static Scanner sc = new Scanner(System.in);
     private static ArrayList<Person> allPeople = new ArrayList<>();
 
-    public static void main(String[] args) {
-
-        ArrayList<Person> people = new ArrayList<>();
+    @Override
+    public void run() {
         int choice;
 
-        people.add(new Person(1, "Aibek", 40, "Visitor"));
-        people.add(new Doctor(2, "Murat", 45, "Doctor", "On duty", 12));
-        people.add(new Doctor(3, "Aidar", 35, "Doctor", "Surgeon", 7));
-        people.add(new Patient(4, "Ali", 20, "Patient", "+77001234567", "Flu"));
-
-        for(Person p : people) {
-            p.work();
+        try {
+            allPeople.add(new Patient(1, "Aibek", 40, "model.Patient", "+77757060761", "Headache"));
+            allPeople.add(new Doctor(2, "Murat", 45, "model.Doctor", "On duty", 12));
+            allPeople.add(new Doctor(3, "Aidar", 35, "model.Doctor", "Surgeon", 7));
+            allPeople.add(new Patient(4, "Ali", 20, "model.Patient", "+77001234567", "Flu"));
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
 
+        for(Person p : allPeople) {
+            p.work();
+        }
 
         do {
             System.out.println("========================================");
             System.out.println("     HOSPITAL MANAGEMENT SYSTEM");
             System.out.println("========================================");
-            System.out.println("1. Add person (GENERAL)");
-            System.out.println("2. Add doctor");
-            System.out.println("3. Add patient");
-            System.out.println("4. View all people (Polymorphic)");
-            System.out.println("5. Make all people work (Polymorphic)");
-            System.out.println("6. View doctors only");
-            System.out.println("7. View patients only");
+            System.out.println("1. Add doctor");
+            System.out.println("2. Add patient");
+            System.out.println("3. View all people (Polymorphic)");
+            System.out.println("4. Make all people work (Polymorphic)");
+            System.out.println("5. View doctors only");
+            System.out.println("6. View patients only");
             System.out.println("0. Exit");
             System.out.println("========================================");
             System.out.print("Enter your choice: ");
@@ -41,30 +44,26 @@ public class Main {
 
             switch (choice) {
                 case 1:
-                    addPerson();
-                    break;
-
-                case 2:
                     addDoctor();
                     break;
 
-                case 3:
+                case 2:
                     addPatient();
                     break;
 
-                case 4:
+                case 3:
                     viewAllPeople();
                     break;
 
-                case 5:
+                case 4:
                     demonstratePolymorphism();
                     break;
 
-                case 6:
+                case 5:
                     viewDoctors();
                     break;
 
-                case 7:
+                case 6:
                     viewPatients();
                     break;
 
@@ -85,29 +84,8 @@ public class Main {
 
 
     }
-    private static void addPerson(){
-        System.out.println("\n-----Add person-----");
 
-        System.out.println("Enter person id: ");
-        int id = sc.nextInt();
-        sc.nextLine();
-
-        System.out.println("Enter name: ");
-        String name = sc.nextLine();
-
-        System.out.println("Enter age: ");
-        int age = sc.nextInt();
-        sc.nextLine();
-
-        System.out.println("Enter role: ");
-        String role = sc.nextLine();
-
-        Person person = new Person(id, name, age, role);
-        allPeople.add(person);
-
-        System.out.println("\n ✅Person added successfully!");
-    }
-    private static void addDoctor(){
+    public static void addDoctor(){
         System.out.println("\n-----Add doctor-----");
 
         System.out.println("Enter doctor id: ");
@@ -121,7 +99,7 @@ public class Main {
         int age = sc.nextInt();
         sc.nextLine();
 
-        String role = "Doctor";
+        String role = "model.Doctor";
 
         System.out.println("Enter experience: ");
         int experience = sc.nextInt();
@@ -130,12 +108,16 @@ public class Main {
         System.out.println("Enter status: ");
         String status = sc.nextLine();
 
-        Person doctor = new Doctor(id, name, age, role, status, experience);
-        allPeople.add(doctor);
+        try {
+            Person doctor = new Doctor(id, name, age, role, status, experience);
+            allPeople.add(doctor);
 
-        System.out.println("\n ✅Person added successfully!");
+            System.out.println("\n ✅model.Person added successfully!");
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
-    private static void addPatient(){
+    public static void addPatient(){
         System.out.println("\n-----Add patient-----");
 
         System.out.println("Enter patient id: ");
@@ -149,7 +131,7 @@ public class Main {
         int age = sc.nextInt();
         sc.nextLine();
 
-        String role = "Patient";
+        String role = "model.Patient";
 
         System.out.println("Enter contact: ");
         String contact = sc.nextLine();
@@ -157,12 +139,31 @@ public class Main {
         System.out.println("Enter sickness: ");
         String sickness = sc.nextLine();
 
-        Person patient = new Patient(id, name, age, role, contact, sickness);
-        allPeople.add(patient);
+        try {
+            Person patient = new Patient(id, name, age, role, contact, sickness);
 
-        System.out.println("\n ✅Person added successfully!");
+            allPeople.add(patient);
+
+            System.out.println("\n ✅model.Person added successfully!");
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
-    private static void viewAllPeople() {
+    public static void demonstratePolymorphism() {
+        System.out.println("\n========================================");
+        System.out.println(" POLYMORPHISM DEMONSTRATION");
+        System.out.println("========================================");
+        System.out.println("Calling work() on all people: ");
+        System.out.println();
+
+        for(Person p : allPeople){
+            p.work();
+        }
+        System.out.println();
+        System.out.println(" Notice: Same method name (work), different output!✨");
+        System.out.println(" This is POLYMORPHISM in action!");
+    }
+    public static void viewAllPeople() {
 
         System.out.println("\n========================================");
         System.out.println(" ALL PEOPLE (POLYMORPHIC LIST)");
@@ -186,34 +187,20 @@ public class Main {
             if (p instanceof Doctor) {
                 Doctor d = (Doctor) p; // downcasting
                 if (d.isSenior()) {
-                    System.out.println(" Senior Doctor 👨‍⚕️");
+                    System.out.println(" Senior model.Doctor 👨‍⚕️");
                 }
             }
             else if (p instanceof Patient) {
                 Patient pat = (Patient) p; // downcasting
                 if (pat.isSick()) {
-                    System.out.println(" Patient needs treatment 🤒");
+                    System.out.println(" model.Patient needs treatment 🤒");
                 }
             }
 
             System.out.println();
         }
     }
-    private static void demonstratePolymorphism() {
-        System.out.println("\n========================================");
-        System.out.println(" POLYMORPHISM DEMONSTRATION");
-        System.out.println("========================================");
-        System.out.println("Calling work() on all people: ");
-        System.out.println();
-
-        for(Person p : allPeople){
-            p.work();
-        }
-        System.out.println();
-        System.out.println(" Notice: Same method name (work), different output!✨");
-        System.out.println(" This is POLYMORPHISM in action!");
-    }
-    private static void viewDoctors() {
+    public static void viewDoctors() {
 
         System.out.println("\n========================================");
         System.out.println(" DOCTORS ONLY");
@@ -233,9 +220,9 @@ public class Main {
 
                 // doctor-specific logic
                 if (d.isSenior()) {
-                    System.out.println(" Senior Doctor 👨‍⚕️");
+                    System.out.println(" Senior model.Doctor 👨‍⚕️");
                 } else {
-                    System.out.println(" Junior Doctor");
+                    System.out.println(" Junior model.Doctor");
                 }
 
                 // unique method
@@ -249,7 +236,7 @@ public class Main {
             System.out.println("No doctors found.");
         }
     }
-    private static void viewPatients() {
+    public static void viewPatients() {
 
         System.out.println("\n========================================");
         System.out.println(" PATIENTS ONLY");
