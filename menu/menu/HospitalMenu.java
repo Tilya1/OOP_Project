@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import model.*;
 
+import javax.print.Doc;
+
 public class HospitalMenu implements Menu {
     static Scanner sc = new Scanner(System.in);
     private static ArrayList<Person> allPeople = new ArrayList<>();
@@ -21,7 +23,7 @@ public class HospitalMenu implements Menu {
             System.out.println("Error: " + e.getMessage());
         }
 
-        for(Person p : allPeople) {
+        for (Person p : allPeople) {
             p.work();
         }
 
@@ -85,7 +87,7 @@ public class HospitalMenu implements Menu {
 
     }
 
-    public static void addDoctor(){
+    public static void addDoctor() {
         System.out.println("\n-----Add doctor-----");
 
         System.out.println("Enter doctor id: ");
@@ -117,7 +119,8 @@ public class HospitalMenu implements Menu {
             System.out.println("Error: " + e.getMessage());
         }
     }
-    public static void addPatient(){
+
+    public static void addPatient() {
         System.out.println("\n-----Add patient-----");
 
         System.out.println("Enter patient id: ");
@@ -139,16 +142,15 @@ public class HospitalMenu implements Menu {
         System.out.println("Enter sickness: ");
         String sickness = sc.nextLine();
 
-        try {
+        try{
             Person patient = new Patient(id, name, age, role, contact, sickness);
-
             allPeople.add(patient);
-
-            System.out.println("\n ✅model.Person added successfully!");
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println("Patient added");
+        }catch (Exception e){
+            System.out.println("Error: " + e.getMessage()) ;
         }
     }
+
     public static void demonstratePolymorphism() {
         System.out.println("\n========================================");
         System.out.println(" POLYMORPHISM DEMONSTRATION");
@@ -156,13 +158,14 @@ public class HospitalMenu implements Menu {
         System.out.println("Calling work() on all people: ");
         System.out.println();
 
-        for(Person p : allPeople){
+        for (Person p : allPeople) {
             p.work();
         }
         System.out.println();
         System.out.println(" Notice: Same method name (work), different output!✨");
         System.out.println(" This is POLYMORPHISM in action!");
     }
+
     public static void viewAllPeople() {
 
         System.out.println("\n========================================");
@@ -189,8 +192,7 @@ public class HospitalMenu implements Menu {
                 if (d.isSenior()) {
                     System.out.println(" Senior model.Doctor 👨‍⚕️");
                 }
-            }
-            else if (p instanceof Patient) {
+            } else if (p instanceof Patient) {
                 Patient pat = (Patient) p; // downcasting
                 if (pat.isSick()) {
                     System.out.println(" model.Patient needs treatment 🤒");
@@ -200,6 +202,7 @@ public class HospitalMenu implements Menu {
             System.out.println();
         }
     }
+
     public static void viewDoctors() {
 
         System.out.println("\n========================================");
@@ -236,6 +239,7 @@ public class HospitalMenu implements Menu {
             System.out.println("No doctors found.");
         }
     }
+
     public static void viewPatients() {
 
         System.out.println("\n========================================");
@@ -271,5 +275,6 @@ public class HospitalMenu implements Menu {
         if (patientCount == 0) {
             System.out.println("No patients found.");
         }
+
     }
-    }
+}
