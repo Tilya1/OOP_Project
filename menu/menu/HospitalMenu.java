@@ -1,280 +1,240 @@
 package menu;
 
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import database.PersonDAO;
+
+
+import database.DatabaseConnection;
+import exception.InvalidInputException;
 import model.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
 
 import javax.print.Doc;
+import javax.sound.midi.Soundbank;
 
 public class HospitalMenu implements Menu {
     static Scanner sc = new Scanner(System.in);
-    private static ArrayList<Person> allPeople = new ArrayList<>();
+    private PersonDAO personDAO = new PersonDAO();
+
 
     @Override
     public void run() {
         int choice;
 
-        try {
-            allPeople.add(new Patient(1, "Aibek", 40, "model.Patient", "+77757060761", "Headache"));
-            allPeople.add(new Doctor(2, "Murat", 45, "model.Doctor", "On duty", 12));
-            allPeople.add(new Doctor(3, "Aidar", 35, "model.Doctor", "Surgeon", 7));
-            allPeople.add(new Patient(4, "Ali", 20, "model.Patient", "+77001234567", "Flu"));
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-        }
-
-        for (Person p : allPeople) {
-            p.work();
-        }
-
         do {
-            System.out.println("========================================");
-            System.out.println("     HOSPITAL MANAGEMENT SYSTEM");
-            System.out.println("========================================");
-            System.out.println("1. Add doctor");
-            System.out.println("2. Add patient");
-            System.out.println("3. View all people (Polymorphic)");
-            System.out.println("4. Make all people work (Polymorphic)");
-            System.out.println("5. View doctors only");
-            System.out.println("6. View patients only");
-            System.out.println("0. Exit");
-            System.out.println("========================================");
-            System.out.print("Enter your choice: ");
+                System.out.println("\n╔════════════════════════════════════════════╗");
+                System.out.println("║        HOSPITAL MANAGEMENT SYSTEM          ║");
+                System.out.println("╚════════════════════════════════════════════╝");
+                System.out.println("┌─ PERSON MANAGEMENT ───────────────────────┐");
+                System.out.println("│ 1. Add Doctor                             │");
+                System.out.println("│ 2. Add Patient                            │");
+                System.out.println("│ 3. View All People                        │");
+                System.out.println("│ 4. View Doctors Only                      │");
+                System.out.println("│ 5. View Patients Only                     │");
+                System.out.println("│ 6. Update Person                          │");
+                System.out.println("│ 7. Delete Person                          │");
+                System.out.println("├─ SEARCH & FILTER ─────────────────────────┤");
+                System.out.println("│ 8. Search by Name                         │");
+                System.out.println("│ 9. Doctors by Experience Range            │");
+                System.out.println("│10. Experienced Doctors (Experience ≥ X)   │");
+                System.out.println("├─ DEMO & OTHER ────────────────────────────┤");
+                System.out.println("│11. Polymorphism Demo                      │");
+                System.out.println("│ 0. Exit                                   │");
+                System.out.println("└───────────────────────────────────────────┘");
+                System.out.print("Enter your choice: ");
 
             choice = sc.nextInt();
             sc.nextLine(); // clear buffer
 
             switch (choice) {
-                case 1:
-                    addDoctor();
-                    break;
-
-                case 2:
-                    addPatient();
-                    break;
-
-                case 3:
-                    viewAllPeople();
-                    break;
-
-                case 4:
-                    demonstratePolymorphism();
-                    break;
-
-                case 5:
-                    viewDoctors();
-                    break;
-
-                case 6:
-                    viewPatients();
-                    break;
-
-                case 0:
-                    System.out.println("Exiting program...");
-                    break;
-
-                default:
-                    System.out.println("Invalid choice. Try again.");
+                case 1: addDoctor(); break;
+                case 2: addPatient(); break;
+                case 3: personDAO.viewAllPeople(); break;
+                case 4: personDAO.viewDoctors(); break;
+                case 5: personDAO.viewPatients(); break;
+                case 6: updatePerson(); break;
+                case 7: deletePerson(); break;
+                case 8: searchByName(); break;
+                case 9: searchDoctorsByExperienceRange(); break;
+                case 10: searchDoctorsByMinExperience(); break;
+                case 11: personDAO.demonstratePolymorphism(); break;
+                case 0: System.out.println("Exiting program..."); break;
+                default: System.out.println("Invalid choice. Try again.");
             }
-
             if (choice != 0) {
                 System.out.println("\nPress Enter to continue...");
                 sc.nextLine();
             }
-
         } while (choice != 0);
-
 
     }
 
-    public static void addDoctor() {
-        System.out.println("\n-----Add doctor-----");
+    public void addDoctor() {
 
-        System.out.println("Enter doctor id: ");
-        int id = sc.nextInt();
-        sc.nextLine();
+        System.out.println("\n--- ADD DOCTOR ---");
 
-        System.out.println("Enter name: ");
+        System.out.print("Enter name: ");
         String name = sc.nextLine();
 
-        System.out.println("Enter age: ");
+        System.out.print("Enter age: ");
         int age = sc.nextInt();
         sc.nextLine();
 
-        String role = "model.Doctor";
-
-        System.out.println("Enter experience: ");
+        System.out.print("Enter experience years: ");
         int experience = sc.nextInt();
         sc.nextLine();
 
-        System.out.println("Enter status: ");
+        System.out.print("Enter status (On duty / Surgeon / etc): ");
         String status = sc.nextLine();
 
         try {
-            Person doctor = new Doctor(id, name, age, role, status, experience);
-            allPeople.add(doctor);
-
-            System.out.println("\n ✅model.Person added successfully!");
+            Doctor doctor = new Doctor(1, name, age, "DOCTOR", status, experience);
+            personDAO.insertDoctor(doctor);
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
     }
 
-    public static void addPatient() {
-        System.out.println("\n-----Add patient-----");
+    public void addPatient() {
 
-        System.out.println("Enter patient id: ");
-        int id = sc.nextInt();
-        sc.nextLine();
+        System.out.println("\n--- ADD PATIENT ---");
 
-        System.out.println("Enter name: ");
+        System.out.print("Enter name: ");
         String name = sc.nextLine();
 
-        System.out.println("Enter age: ");
+        System.out.print("Enter age: ");
         int age = sc.nextInt();
         sc.nextLine();
 
-        String role = "model.Patient";
-
-        System.out.println("Enter contact: ");
+        System.out.print("Enter contact: ");
         String contact = sc.nextLine();
 
-        System.out.println("Enter sickness: ");
+        System.out.print("Enter sickness: ");
         String sickness = sc.nextLine();
 
-        try{
-            Person patient = new Patient(id, name, age, role, contact, sickness);
-            allPeople.add(patient);
-            System.out.println("Patient added");
-        }catch (Exception e){
-            System.out.println("Error: " + e.getMessage()) ;
+        try {
+            Patient patient = new Patient(1, name, age, "PATIENT", contact, sickness);
+            personDAO.insertPatient(patient);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
-    public static void demonstratePolymorphism() {
-        System.out.println("\n========================================");
-        System.out.println(" POLYMORPHISM DEMONSTRATION");
-        System.out.println("========================================");
-        System.out.println("Calling work() on all people: ");
-        System.out.println();
+    private void updatePerson() {
 
-        for (Person p : allPeople) {
-            p.work();
-        }
-        System.out.println();
-        System.out.println(" Notice: Same method name (work), different output!✨");
-        System.out.println(" This is POLYMORPHISM in action!");
-    }
+        System.out.print("\nEnter Person ID to update: ");
 
-    public static void viewAllPeople() {
+        try {
+            int id = sc.nextInt();
+            sc.nextLine();
 
-        System.out.println("\n========================================");
-        System.out.println(" ALL PEOPLE (POLYMORPHIC LIST)");
-        System.out.println("========================================");
+            Person existing = personDAO.getPersonById(id);
 
-        if (allPeople.isEmpty()) {
-            System.out.println("No people found.");
-            return;
-        }
-
-        System.out.println("Total people: " + allPeople.size());
-        System.out.println();
-
-        for (int i = 0; i < allPeople.size(); i++) {
-            Person p = allPeople.get(i);
-
-            // basic info (polymorphic)
-            System.out.println((i + 1) + ". " + p.getInfo());
-
-            // child-specific info
-            if (p instanceof Doctor) {
-                Doctor d = (Doctor) p; // downcasting
-                if (d.isSenior()) {
-                    System.out.println(" Senior model.Doctor 👨‍⚕️");
-                }
-            } else if (p instanceof Patient) {
-                Patient pat = (Patient) p; // downcasting
-                if (pat.isSick()) {
-                    System.out.println(" model.Patient needs treatment 🤒");
-                }
+            if (existing == null) {
+                System.out.println("❌ No person found with ID: " + id);
+                return;
             }
 
-            System.out.println();
-        }
-    }
+            System.out.println("Current Info: " + existing.getInfo());
+            System.out.println("Press Enter to keep old value");
 
-    public static void viewDoctors() {
+            System.out.print("New Name [" + existing.getName() + "]: ");
+            String newName = sc.nextLine();
+            if (newName.isEmpty()) newName = existing.getName();
 
-        System.out.println("\n========================================");
-        System.out.println(" DOCTORS ONLY");
-        System.out.println("========================================");
+            System.out.print("New Age [" + existing.getAge() + "]: ");
+            String ageInput = sc.nextLine();
+            int newAge = ageInput.isEmpty() ? existing.getAge() : Integer.parseInt(ageInput);
 
-        int doctorCount = 0;
+            if (existing instanceof Doctor) {
+                Doctor d = (Doctor) existing;
 
-        for (int i = 0; i < allPeople.size(); i++) {
-            Person p = allPeople.get(i);
+                System.out.print("New Status [" + d.getStatus() + "]: ");
+                String newStatus = sc.nextLine();
+                if (newStatus.isEmpty()) newStatus = d.getStatus();
 
-            if (p instanceof Doctor) {          // filter by type
-                Doctor d = (Doctor) p;          // downcasting
-                doctorCount++;
+                System.out.print("New Experience [" + d.getExperience() + "]: ");
+                String expInput = sc.nextLine();
+                int newExp = expInput.isEmpty() ? d.getExperience() : Integer.parseInt(expInput);
 
-                // polymorphic / overridden method
-                System.out.println(doctorCount + ". " + d.getInfo());
+                Doctor updated = new Doctor(id, newName, newAge, "DOCTOR", newStatus, newExp);
+                personDAO.updateDoctor(updated);
 
-                // doctor-specific logic
-                if (d.isSenior()) {
-                    System.out.println(" Senior model.Doctor 👨‍⚕️");
-                } else {
-                    System.out.println(" Junior model.Doctor");
-                }
+            } else {
+                Patient p = (Patient) existing;
 
-                // unique method
-                d.showExperience();
+                System.out.print("New Contact [" + p.getContact() + "]: ");
+                String newContact = sc.nextLine();
+                if (newContact.isEmpty()) newContact = p.getContact();
 
-                System.out.println();
+                System.out.print("New Sickness [" + p.getSickness() + "]: ");
+                String newSickness = sc.nextLine();
+                if (newSickness.isEmpty()) newSickness = p.getSickness();
+
+                Patient updated = new Patient(id, newName, newAge, "PATIENT", newContact, newSickness);
+                personDAO.updatePatient(updated);
             }
-        }
 
-        if (doctorCount == 0) {
-            System.out.println("No doctors found.");
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
         }
     }
 
-    public static void viewPatients() {
+    private void deletePerson() {
 
-        System.out.println("\n========================================");
-        System.out.println(" PATIENTS ONLY");
-        System.out.println("========================================");
+        System.out.print("\nEnter Person ID to delete: ");
 
-        int patientCount = 0;
+        try {
+            int id = sc.nextInt();
+            sc.nextLine();
 
-        for (int i = 0; i < allPeople.size(); i++) {
-            Person p = allPeople.get(i);
+            Person person = personDAO.getPersonById(id);
 
-            if (p instanceof Patient) {          // filter by type
-                Patient pat = (Patient) p;       // downcasting
-                patientCount++;
-
-                // polymorphic / overridden method
-                System.out.println(patientCount + ". " + pat.getInfo());
-
-                // patient-specific logic
-                if (pat.isSick()) {
-                    System.out.println(" Status: Sick 🤒");
-                } else {
-                    System.out.println(" Status: Healthy");
-                }
-
-                // unique getter usage
-                System.out.println(" Contact: " + pat.getContact());
-
-                System.out.println();
+            if (person == null) {
+                System.out.println("❌ No person found with ID: " + id);
+                return;
             }
-        }
 
-        if (patientCount == 0) {
-            System.out.println("No patients found.");
-        }
+            System.out.println("Person to delete: " + person.getInfo());
+            System.out.print("⚠️  Are you sure? (yes/no): ");
+            String confirm = sc.nextLine();
 
+            if (confirm.equalsIgnoreCase("yes")) {
+                personDAO.deletePerson(id);
+            } else {
+                System.out.println("❌ Deletion cancelled.");
+            }
+
+        } catch (Exception e) {
+            System.out.println("❌ Invalid input!");
+        }
     }
+
+    private void searchByName() {
+        System.out.print("\nEnter name to search: ");
+        String name = sc.nextLine();
+        personDAO.searchByName(name);
+    }
+
+    private void searchDoctorsByExperienceRange() {
+        System.out.print("Enter min experience: ");
+        int min = sc.nextInt();
+        System.out.print("Enter max experience: ");
+        int max = sc.nextInt();
+        sc.nextLine();
+        personDAO.searchDoctorsByExperienceRange(min, max);
+    }
+
+    private void searchDoctorsByMinExperience() {
+        System.out.print("Enter minimum experience: ");
+        int min = sc.nextInt();
+        sc.nextLine();
+        personDAO.searchDoctorsByMinExperience(min);
+    }
+
+
 }
