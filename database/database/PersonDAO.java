@@ -1,10 +1,11 @@
 package database;
 
 import model.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+
+import javax.xml.crypto.Data;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PersonDAO {
 
@@ -111,101 +112,139 @@ public class PersonDAO {
         }
     }
 
-    public void viewAllPeople() {
+    public List<Person> getAllPeople() {
 
-        String sql = "SELECT * FROM person";
+        List<Person> peopleList = new ArrayList<>();
+        String sql = "SELECT * FROM person ORDER BY person_id";
+
         Connection connection = DatabaseConnection.getConnection();
+        if (connection == null) return peopleList;
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
-            ResultSet rs = statement.executeQuery();
+            ResultSet resultSet = statement.executeQuery();
 
-            System.out.println("\n=== ALL PEOPLE FROM DATABASE ===");
+            while (resultSet.next()) {
+                Person person = extractPersonFromResultSet(resultSet);
+                if (person != null) {
+                    peopleList.add(person);
+                }
+            }
 
-            while (rs.next()) {
+            resultSet.close();
+            statement.close();
 
-                int id = rs.getInt("person_id");
-                String name = rs.getString("name");
-                int age = rs.getInt("age");
-                String role = rs.getString("role");
+            System.out.println("✅ Retrieved " + peopleList.size() + " people from database");
 
-                System.out.println("ID: " + id + " | Name: " + name + " | Age: " + age + " | Role: " + role);
+        } catch (SQLException e) {
+            System.out.println("❌ Select all people failed!");
+            e.printStackTrace();
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
 
-                if ("DOCTOR".equals(role)) {
-                    System.out.println("Status: " + rs.getString("status"));
-                    System.out.println("Experience: " + rs.getInt("experience") + " years");
-                } else {
-                    System.out.println("Contact: " + rs.getString("contact"));
-                    System.out.println("Sickness: " + rs.getString("sickness"));
+        return peopleList;
+    }
+
+    public void displayAllPeople() {
+
+        List<Person> peopleList = getAllPeople();
+
+        System.out.println("\n========================================");
+        System.out.println("   ALL PEOPLE FROM DATABASE");
+        System.out.println("========================================");
+
+        if (peopleList.isEmpty()) {
+            System.out.println("No people in database.");
+        } else {
+            for (int i = 0; i < peopleList.size(); i++) {
+                Person p = peopleList.get(i);
+
+                System.out.print((i + 1) + ". ");
+                System.out.print("[" + p.getRole() + "] ");
+                System.out.println(p.getInfo());
+
+                if (p instanceof Doctor d) {
+                    System.out.println(" Status: " + d.getStatus());
+                    System.out.println(" Experience: " + d.getExperience() + " years");
+                } else if (p instanceof Patient pat) {
+                    System.out.println(" Contact: " + pat.getContact());
+                    System.out.println(" Sickness: " + pat.getSickness());
                 }
 
-                System.out.println("----------------------");
+                System.out.println("----------------------------------------");
             }
-
-            rs.close();
-            statement.close();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            DatabaseConnection.closeConnection(connection);
         }
+
+        System.out.println("========================================\n");
     }
 
-    public void viewDoctors() {
+    public List<Doctor> getAllDoctors() {
 
-        String sql = "SELECT * FROM person WHERE role = 'DOCTOR'";
+        List<Doctor> doctors = new ArrayList<>();
+        String sql = "SELECT * FROM person WHERE role = 'DOCTOR' ORDER BY person_id";
+
         Connection connection = DatabaseConnection.getConnection();
+        if (connection == null) return doctors;
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
             ResultSet rs = statement.executeQuery();
 
-            System.out.println("\n=== DOCTORS ===");
-
             while (rs.next()) {
-                System.out.println("Doctor: " + rs.getString("name"));
-                System.out.println("Experience: " + rs.getInt("experience") + " years");
-                System.out.println("Status: " + rs.getString("status"));
-                System.out.println("----------------------");
+                Person person = extractPersonFromResultSet(rs);
+                if (person instanceof Doctor) {
+                    doctors.add((Doctor) person);
+                }
             }
 
             rs.close();
             statement.close();
 
+            System.out.println("✅ Retrieved " + doctors.size() + " doctors");
+
         } catch (SQLException e) {
+            System.out.println("❌ Select doctors failed!");
             e.printStackTrace();
         } finally {
             DatabaseConnection.closeConnection(connection);
         }
+
+        return doctors;
     }
 
-    public void viewPatients() {
+    public List<Patient> getAllPatients() {
 
-        String sql = "SELECT * FROM person WHERE role = 'PATIENT'";
+        List<Patient> patients = new ArrayList<>();
+        String sql = "SELECT * FROM person WHERE role = 'PATIENT' ORDER BY person_id";
+
         Connection connection = DatabaseConnection.getConnection();
+        if (connection == null) return patients;
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
             ResultSet rs = statement.executeQuery();
 
-            System.out.println("\n=== PATIENTS ===");
-
             while (rs.next()) {
-                System.out.println("Patient: " + rs.getString("name"));
-                System.out.println("Contact: " + rs.getString("contact"));
-                System.out.println("Sickness: " + rs.getString("sickness"));
-                System.out.println("----------------------");
+                Person person = extractPersonFromResultSet(rs);
+                if (person instanceof Patient) {
+                    patients.add((Patient) person);
+                }
             }
 
             rs.close();
             statement.close();
 
+            System.out.println("✅ Retrieved " + patients.size() + " patients");
+
         } catch (SQLException e) {
+            System.out.println("❌ Select patients failed!");
             e.printStackTrace();
         } finally {
             DatabaseConnection.closeConnection(connection);
         }
+
+        return patients;
     }
 
     public boolean updateDoctor(Doctor doctor) {
@@ -357,91 +396,78 @@ public class PersonDAO {
     }
 
     public boolean deletePerson(int personId) {
-
         String sql = "DELETE FROM person WHERE person_id = ?";
 
         Connection connection = DatabaseConnection.getConnection();
-        if (connection == null) return false;
+        if(connection == null){
+            System.out.println("Connection failed");
+            return false;
+        }
 
-        try {
+        try{
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setInt(1, personId);
 
             int rowsDeleted = statement.executeUpdate();
-            statement.close();
-
-            if (rowsDeleted > 0) {
-                System.out.println("✅ Person deleted (ID: " + personId + ")");
+            if(rowsDeleted > 0){
+                System.out.println("Deleted successfully, id: " + personId);
                 return true;
-            } else {
-                System.out.println("⚠️ No person found with ID: " + personId);
             }
-
-        } catch (SQLException e) {
-            System.out.println("❌ Delete failed!");
+        } catch(SQLException e){
+            System.out.println("Delete failed");
             e.printStackTrace();
-        } finally {
+        } finally{
             DatabaseConnection.closeConnection(connection);
         }
-
         return false;
     }
 
-    public void searchByName(String name) {
+    public List<Person> searchByName(String name) {
 
+        List<Person> peopleList = new ArrayList<>();
+
+        // ILIKE = регистронезависимый поиск, % = частичное совпадение
         String sql = "SELECT * FROM person WHERE name ILIKE ? ORDER BY name";
+
         Connection connection = DatabaseConnection.getConnection();
+        if (connection == null) return peopleList;
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, "%" + name + "%");
 
-            ResultSet rs = statement.executeQuery();
+            ResultSet resultSet = statement.executeQuery();
 
-            boolean found = false;
-
-            System.out.println("\n=== SEARCH RESULTS ===");
-
-            while (rs.next()) {
-                found = true;
-
-                int id = rs.getInt("person_id");
-                String personName = rs.getString("name");
-                int age = rs.getInt("age");
-                String role = rs.getString("role");
-
-                System.out.println("ID: " + id + " | Name: " + personName + " | Age: " + age + " | Role: " + role);
-
-                if ("DOCTOR".equals(role)) {
-                    System.out.println("Status: " + rs.getString("status"));
-                    System.out.println("Experience: " + rs.getInt("experience"));
-                } else {
-                    System.out.println("Contact: " + rs.getString("contact"));
-                    System.out.println("Sickness: " + rs.getString("sickness"));
+            while (resultSet.next()) {
+                Person person = extractPersonFromResultSet(resultSet);
+                if (person != null) {
+                    peopleList.add(person);
                 }
-
-                System.out.println("----------------------");
             }
 
-            if (!found) {
-                System.out.println("No people found matching '" + name + "'");
-            }
-
-            rs.close();
+            resultSet.close();
             statement.close();
 
+            System.out.println("✅ Found " + peopleList.size() + " people matching '" + name + "'");
+
         } catch (SQLException e) {
-            System.out.println("❌ Search failed!");
+            System.out.println("❌ Search by name failed!");
             e.printStackTrace();
         } finally {
             DatabaseConnection.closeConnection(connection);
         }
+
+        return peopleList;
     }
 
-    public void searchDoctorsByExperienceRange(int minExp, int maxExp) {
+    public List<Doctor> searchDoctorsByExperienceRange(int minExp, int maxExp) {
+
+        List<Doctor> doctors = new ArrayList<>();
 
         String sql = "SELECT * FROM person WHERE role = 'DOCTOR' AND experience BETWEEN ? AND ? ORDER BY experience DESC";
+
         Connection connection = DatabaseConnection.getConnection();
+        if (connection == null) return doctors;
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -450,26 +476,18 @@ public class PersonDAO {
 
             ResultSet rs = statement.executeQuery();
 
-            boolean found = false;
-
-            System.out.println("\n=== DOCTORS EXPERIENCE " + minExp + " - " + maxExp + " YEARS ===");
-
             while (rs.next()) {
-                found = true;
-
-                System.out.println("ID: " + rs.getInt("person_id"));
-                System.out.println("Name: " + rs.getString("name"));
-                System.out.println("Experience: " + rs.getInt("experience") + " years");
-                System.out.println("Status: " + rs.getString("status"));
-                System.out.println("----------------------");
-            }
-
-            if (!found) {
-                System.out.println("No doctors found in this experience range.");
+                Person person = extractPersonFromResultSet(rs);
+                if (person instanceof Doctor) {
+                    doctors.add((Doctor) person);
+                }
             }
 
             rs.close();
             statement.close();
+
+            System.out.println("✅ Found " + doctors.size() + " doctors in experience range " +
+                    minExp + " - " + maxExp);
 
         } catch (SQLException e) {
             System.out.println("❌ Search failed!");
@@ -477,12 +495,18 @@ public class PersonDAO {
         } finally {
             DatabaseConnection.closeConnection(connection);
         }
+
+        return doctors;
     }
 
-    public void searchDoctorsByMinExperience(int minExp) {
+    public List<Doctor> searchDoctorsByMinExperience(int minExp) {
+
+        List<Doctor> doctors = new ArrayList<>();
 
         String sql = "SELECT * FROM person WHERE role = 'DOCTOR' AND experience >= ? ORDER BY experience DESC";
+
         Connection connection = DatabaseConnection.getConnection();
+        if (connection == null) return doctors;
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -490,26 +514,17 @@ public class PersonDAO {
 
             ResultSet rs = statement.executeQuery();
 
-            boolean found = false;
-
-            System.out.println("\n=== DOCTORS WITH EXPERIENCE >= " + minExp + " YEARS ===");
-
             while (rs.next()) {
-                found = true;
-
-                System.out.println("ID: " + rs.getInt("person_id"));
-                System.out.println("Name: " + rs.getString("name"));
-                System.out.println("Experience: " + rs.getInt("experience") + " years");
-                System.out.println("Status: " + rs.getString("status"));
-                System.out.println("----------------------");
-            }
-
-            if (!found) {
-                System.out.println("No doctors found.");
+                Person person = extractPersonFromResultSet(rs);
+                if (person instanceof Doctor) {
+                    doctors.add((Doctor) person);
+                }
             }
 
             rs.close();
             statement.close();
+
+            System.out.println("✅ Found " + doctors.size() + " doctors with experience ≥ " + minExp);
 
         } catch (SQLException e) {
             System.out.println("❌ Search failed!");
@@ -517,7 +532,8 @@ public class PersonDAO {
         } finally {
             DatabaseConnection.closeConnection(connection);
         }
-    }
 
+        return doctors;
+    }
 
 }

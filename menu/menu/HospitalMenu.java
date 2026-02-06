@@ -1,11 +1,10 @@
 package menu;
 
 import java.sql.SQLOutput;
-import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import database.PersonDAO;
-
 
 import database.DatabaseConnection;
 import exception.InvalidInputException;
@@ -15,6 +14,9 @@ import java.sql.DriverManager;
 
 import javax.print.Doc;
 import javax.sound.midi.Soundbank;
+
+import java.util.List;
+import java.util.ArrayList;
 
 public class HospitalMenu implements Menu {
     static Scanner sc = new Scanner(System.in);
@@ -53,9 +55,9 @@ public class HospitalMenu implements Menu {
             switch (choice) {
                 case 1: addDoctor(); break;
                 case 2: addPatient(); break;
-                case 3: personDAO.viewAllPeople(); break;
-                case 4: personDAO.viewDoctors(); break;
-                case 5: personDAO.viewPatients(); break;
+                case 3: viewAllPeople(); break;
+                case 4: viewDoctors(); break;
+                case 5: viewPatients(); break;
                 case 6: updatePerson(); break;
                 case 7: deletePerson(); break;
                 case 8: searchByName(); break;
@@ -121,6 +123,66 @@ public class HospitalMenu implements Menu {
             personDAO.insertPatient(patient);
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private void viewAllPeople() {
+        personDAO.displayAllPeople();
+    }
+
+    private void viewDoctors() {
+
+        List<Doctor> doctors = personDAO.getAllDoctors();
+
+        System.out.println("\n╔════════════════════════════════════════╗");
+        System.out.println("║          DOCTORS ONLY                  ║");
+        System.out.println("╚════════════════════════════════════════╝");
+
+        if (doctors.isEmpty()) {
+            System.out.println("📭 No doctors in database.");
+        } else {
+            for (int i = 0; i < doctors.size(); i++) {
+                Doctor d = doctors.get(i);
+
+                System.out.println((i + 1) + ". " + d.getInfo());
+                System.out.println("   Status: " + d.getStatus());
+                System.out.println("   Experience: " + d.getExperience() + " years");
+
+                if (d.isSenior()) {
+                    System.out.println("   ⭐ SENIOR DOCTOR (10+ years)");
+                }
+
+                System.out.println();
+            }
+            System.out.println("Total Doctors: " + doctors.size());
+        }
+    }
+
+    private void viewPatients() {
+
+        List<Patient> patients = personDAO.getAllPatients();
+
+        System.out.println("\n╔════════════════════════════════════════╗");
+        System.out.println("║          PATIENTS ONLY                 ║");
+        System.out.println("╚════════════════════════════════════════╝");
+
+        if (patients.isEmpty()) {
+            System.out.println("📭 No patients in database.");
+        } else {
+            for (int i = 0; i < patients.size(); i++) {
+                Patient p = patients.get(i);
+
+                System.out.println((i + 1) + ". " + p.getInfo());
+                System.out.println("   Contact: " + p.getContact());
+                System.out.println("   Sickness: " + p.getSickness());
+
+                if (p.isSick()) {
+                    System.out.println("   ⚠ Needs treatment");
+                }
+
+                System.out.println();
+            }
+            System.out.println("Total Patients: " + patients.size());
         }
     }
 
@@ -215,26 +277,113 @@ public class HospitalMenu implements Menu {
     }
 
     private void searchByName() {
-        System.out.print("\nEnter name to search: ");
+
+        System.out.println("\n┌─ SEARCH BY NAME ───────────────────────┐");
+        System.out.print("│ Enter name to search: ");
         String name = sc.nextLine();
-        personDAO.searchByName(name);
+        System.out.println("└────────────────────────────────────────┘");
+
+        List<Person> results = personDAO.searchByName(name);
+
+        displaySearchResults(results, "Search: '" + name + "'");
+    }
+
+    private void displaySearchResults(List<Person> results, String title) {
+
+        System.out.println("\n========================================");
+        System.out.println("   " + title);
+        System.out.println("========================================");
+
+        if (results.isEmpty()) {
+            System.out.println("No matching people found.");
+        } else {
+            for (int i = 0; i < results.size(); i++) {
+                Person p = results.get(i);
+
+                System.out.print((i + 1) + ". ");
+                System.out.print("[" + p.getRole() + "] ");
+                System.out.println(p.getInfo());
+
+                if (p instanceof Doctor d) {
+                    System.out.println(" Status: " + d.getStatus());
+                    System.out.println(" Experience: " + d.getExperience() + " years");
+                } else if (p instanceof Patient pat) {
+                    System.out.println(" Contact: " + pat.getContact());
+                    System.out.println(" Sickness: " + pat.getSickness());
+                }
+
+                System.out.println("----------------------------------------");
+            }
+        }
+
+        System.out.println("========================================\n");
     }
 
     private void searchDoctorsByExperienceRange() {
-        System.out.print("Enter min experience: ");
-        int min = sc.nextInt();
-        System.out.print("Enter max experience: ");
-        int max = sc.nextInt();
-        sc.nextLine();
-        personDAO.searchDoctorsByExperienceRange(min, max);
+
+        try {
+            System.out.println("\n┌─ SEARCH DOCTORS BY EXPERIENCE RANGE ───┐");
+            System.out.print("│ Enter minimum experience: ");
+            int minExp = sc.nextInt();
+
+            System.out.print("│ Enter maximum experience: ");
+            int maxExp = sc.nextInt();
+            sc.nextLine();
+            System.out.println("└────────────────────────────────────────┘");
+
+            List<Doctor> results = personDAO.searchDoctorsByExperienceRange(minExp, maxExp);
+
+            displayDoctorSearchResults(results, "Experience: " + minExp + " - " + maxExp + " years");
+
+        } catch (InputMismatchException e) {
+            System.out.println("❌ Invalid number!");
+            sc.nextLine();
+        }
     }
 
     private void searchDoctorsByMinExperience() {
-        System.out.print("Enter minimum experience: ");
-        int min = sc.nextInt();
-        sc.nextLine();
-        personDAO.searchDoctorsByMinExperience(min);
+
+        try {
+            System.out.println("\n┌─ EXPERIENCED DOCTORS ───────────────────┐");
+            System.out.print("│ Enter minimum experience: ");
+            int minExp = sc.nextInt();
+            sc.nextLine();
+            System.out.println("└────────────────────────────────────────┘");
+
+            List<Doctor> results = personDAO.searchDoctorsByMinExperience(minExp);
+
+            displayDoctorSearchResults(results, "Experience ≥ " + minExp + " years");
+
+        } catch (InputMismatchException e) {
+            System.out.println("❌ Invalid number!");
+            sc.nextLine();
+        }
     }
 
+    private void displayDoctorSearchResults(List<Doctor> doctors, String title) {
+
+        System.out.println("\n========================================");
+        System.out.println("   " + title);
+        System.out.println("========================================");
+
+        if (doctors.isEmpty()) {
+            System.out.println("No doctors found.");
+        } else {
+            for (int i = 0; i < doctors.size(); i++) {
+                Doctor d = doctors.get(i);
+                System.out.println((i + 1) + ". " + d.getInfo());
+                System.out.println("   Status: " + d.getStatus());
+                System.out.println("   Experience: " + d.getExperience() + " years");
+
+                if (d.isSenior()) {
+                    System.out.println("   ⭐ Senior Doctor");
+                }
+
+                System.out.println();
+            }
+        }
+
+        System.out.println("========================================\n");
+    }
 
 }
